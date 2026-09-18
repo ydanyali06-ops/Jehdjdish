@@ -3,13 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>My AI</title>
 
 <style>
-* {
-  box-sizing: border-box;
-}
-
 body {
   margin: 0;
   background: #050505;
@@ -17,132 +14,114 @@ body {
   font-family: Arial, sans-serif;
 }
 
-header {
-  padding: 18px;
+h1 {
   text-align: center;
-  background: #090909;
-  border-bottom: 1px solid #300000;
-  color: #ff2020;
-  font-size: 24px;
-  font-weight: bold;
+  color: red;
 }
 
 #chat {
-  height: calc(100vh - 140px);
+  height: 75vh;
   overflow-y: auto;
   padding: 15px;
 }
 
-.message {
-  max-width: 85%;
-  padding: 12px 15px;
+.msg {
+  padding: 12px;
   margin: 10px 0;
-  border-radius: 15px;
-  line-height: 1.6;
+  border-radius: 12px;
   white-space: pre-wrap;
 }
 
 .user {
-  margin-right: auto;
-  background: #330000;
-  border: 1px solid #700000;
+  background: #350000;
 }
 
 .ai {
-  margin-left: auto;
-  background: #151515;
-  border: 1px solid #333;
+  background: #181818;
 }
 
-#inputBox {
+#bottom {
   position: fixed;
   bottom: 0;
-  left: 0;
-  right: 0;
+  width: 100%;
+  background: #090909;
+  padding: 10px;
   display: flex;
   gap: 8px;
-  padding: 10px;
-  background: #090909;
-  border-top: 1px solid #300000;
 }
 
-#message {
+#input {
   flex: 1;
   padding: 13px;
-  border-radius: 12px;
+  background: #151515;
+  color: white;
   border: 1px solid #444;
-  background: #111;
-  color: white;
-  outline: none;
+  border-radius: 10px;
   font-size: 16px;
 }
 
-button {
-  padding: 0 18px;
+#send {
+  padding: 10px 18px;
+  background: red;
+  color: white;
   border: none;
-  border-radius: 12px;
-  background: #e00000;
-  color: white;
+  border-radius: 10px;
   font-size: 16px;
-  font-weight: bold;
-}
-
-button:active {
-  background: #900000;
 }
 </style>
 </head>
 
 <body>
 
-<header>My AI 🤖</header>
+<h1>My AI 🤖</h1>
 
 <div id="chat"></div>
 
-<div id="inputBox">
-  <input
-    id="message"
-    type="text"
-    placeholder="پیامت را بنویس..."
-    autocomplete="off"
-  >
-  <button onclick="sendMessage()">ارسال</button>
+<div id="bottom">
+<input id="input" placeholder="پیامت را بنویس...">
+<button id="send">ارسال</button>
 </div>
 
 <script>
 
-const WORKER_URL =
-"https://old-fire-5f7e.ydanyali95.workers.dev/";
+const WORKER =
+"https://old-fire-5f7e.ydanyani95.workers.dev/";
 
+const input = document.getElementById("input");
+const send = document.getElementById("send");
 const chat = document.getElementById("chat");
-const messageInput = document.getElementById("message");
 
 function addMessage(text, type) {
+
   const div = document.createElement("div");
-  div.className = "message " + type;
+
+  div.className = "msg " + type;
+
   div.textContent = text;
+
   chat.appendChild(div);
+
   chat.scrollTop = chat.scrollHeight;
 }
 
 async function sendMessage() {
 
-  const text = messageInput.value.trim();
+  const text = input.value.trim();
 
-  if (!text) return;
+  if (text === "") return;
 
   addMessage(text, "user");
 
-  messageInput.value = "";
+  input.value = "";
 
   addMessage("در حال فکر کردن...", "ai");
 
-  const aiMessage =
-    chat.lastElementChild;
+  const ai = chat.lastElementChild;
 
   try {
 
-    const response = await fetch(WORKER_URL, {
+    const response = await fetch(WORKER, {
+
       method: "POST",
 
       headers: {
@@ -152,6 +131,7 @@ async function sendMessage() {
       body: JSON.stringify({
         message: text
       })
+
     });
 
     const data = await response.json();
@@ -160,11 +140,34 @@ async function sendMessage() {
       throw new Error(
         data.error?.message ||
         data.error ||
-        "خطای سرور"
+        "Server Error"
       );
     }
 
-    aiMessage.textContent =
-      data.reply || "پاسخی دریافت نشد.";
+    ai.textContent =
+      data.reply || "AI پاسخی نداد.";
+
+  } catch (error) {
+
+    ai.textContent =
+      "خطا در اتصال به Worker ❌";
+
+    console.log(error);
 
   }
+}
+
+send.addEventListener("click", sendMessage);
+
+input.addEventListener("keydown", function(e) {
+
+  if (e.key === "Enter") {
+    sendMessage();
+  }
+
+});
+
+</script>
+
+</body>
+</html>
